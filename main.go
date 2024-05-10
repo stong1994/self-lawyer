@@ -1,6 +1,6 @@
 package main
 
-import "self-laywer/document_parser"
+import "self-lawyer/document_parser"
 
 func main() {
 	laws, err := document_parser.Parse()

@@ -1,4 +1,4 @@
-module self-laywer
+module self-lawyer
 
 go 1.21.3
 
