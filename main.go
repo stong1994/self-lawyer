@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"self-lawyer/document_parser"
-	"self-lawyer/search_engine"
+	"self-lawyer/repo"
+	"self-lawyer/vector"
 )
 
 func main() {
@@ -14,13 +14,14 @@ func main() {
 	}
 	laws.Print()
 	_ = laws
-	searchEngine, err := search_engine.NewOllama()
+	ollama, err := vector.NewOllama()
 	if err != nil {
 		panic(err)
 	}
-	vector, err := searchEngine.Embed(context.Background(), "hello")
+	milvus := repo.NewMilvus(ollama)
+
+	err = milvus.Store(context.Background(), laws)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(vector)
 }
