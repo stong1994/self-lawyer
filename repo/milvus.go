@@ -52,5 +52,56 @@ func (m *Milvus) Store(ctx context.Context, laws document_parser.Laws) error {
 		entity.NewColumnVarChar(contentCol, contents),
 		entity.NewColumnFloatVector(embeddingCol, dim, embeddings),
 	)
-	return err
+	if err != nil {
+		return err
+	}
+	return m.client.Flush(ctx, collectionName, false)
+}
+
+func (m *Milvus) Search(ctx context.Context, content string) (document_parser.Laws, error) {
+	// Embed content
+	embedding, err := m.vector.Embed(ctx, content)
+	if err != nil {
+		return nil, err
+	}
+	sp, err := entity.NewIndexHNSWSearchParam(16)
+	if err != nil {
+		return nil, err
+	}
+	// Search similar vectors
+	res, err := m.client.Search(
+		ctx,
+		collectionName,
+		nil,
+		"",
+		[]string{idCol, titleCol, contentCol, embeddingCol},
+		[]entity.Vector{entity.FloatVector(embedding)},
+		embeddingCol,
+		entity.L2,
+		10,
+		sp,
+	)
+	if err != nil {
+		return nil, err
+	}
+	var laws []document_parser.Law
+	for _, row := range res {
+		title := row.Fields.GetColumn(titleCol)
+		content := row.Fields.GetColumn(contentCol)
+		for i := 0; i < title.Len(); i++ {
+			t, err := title.GetAsString(i)
+			if err != nil {
+				return nil, err
+			}
+			c, err := content.GetAsString(i)
+			if err != nil {
+				return nil, err
+			}
+			laws = append(laws, document_parser.Law{
+				Title:   t,
+				Content: []string{c},
+			})
+		}
+	}
+	return laws, nil
 }

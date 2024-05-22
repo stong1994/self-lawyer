@@ -62,8 +62,8 @@ func Parse() (Laws, error) {
 				fmt.Printf("No title for this content: %s\n", string(line.Value(data)))
 			}
 		default:
-			fmt.Printf("default: %s\n", node.Kind())
-			fmt.Println(string(node.Text(doc.Text(data))))
+			// fmt.Printf("default: %s\n", node.Kind())
+			// fmt.Println(string(node.Text(doc.Text(data))))
 		}
 		return ast.WalkContinue, nil
 	})
