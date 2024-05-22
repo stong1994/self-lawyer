@@ -13,9 +13,10 @@ const (
 	// Milvus instance proxy address, may verify in your env/settings
 	milvusAddr = `localhost:19530`
 
+	dbName                                    = "self_lawyer"
 	collectionName                            = `laws`
 	dim                                       = 768
-	idCol, titleCol, contentCol, embeddingCol = "id", "title", "raw", "embeddings"
+	idCol, titleCol, contentCol, embeddingCol = "id", "title", "content", "embedding"
 )
 
 // basic milvus operation example
@@ -80,6 +81,7 @@ func InitCollection(ctx context.Context) client.Client {
 		"M":              "16",
 		"efConstruction": "100",
 		"ef":             "20",
+		"metric_type":    "L2",
 	}
 	err = c.CreateIndex(ctx, collectionName, embeddingCol, entity.NewGenericIndex("idx_embedding", entity.HNSW, params), false)
 	if err != nil {
