@@ -73,12 +73,17 @@ func (o *Ollama) Complete(ctx context.Context, problem string) (string, error) {
 		return "", err
 	}
 	messages := o.jointUserMessage(problem, laws)
-	log.Printf("completing, message: %+v", messages)
+	log.Printf("completing, request message: %+v", messages)
+	log.Print("completing, please wait...")
 	res, err := o.llm.GenerateContent(ctx, messages)
 	if err != nil {
 		return "", err
 	}
-	log.Printf("Choices: %v", res.Choices)
+
+	log.Print("got choices")
+	for i, choice := range res.Choices {
+		log.Printf("\tchoice %d: content: %s, stop reason: %s", i, choice.Content, choice.StopReason)
+	}
 	if len(res.Choices) > 0 {
 		o.jointAIMessage(res.Choices[0].Content)
 		return res.Choices[0].Content, nil
