@@ -15,19 +15,16 @@ func main() {
 	}
 	// laws.Print()
 	_ = laws
+	fmt.Println("got laws ", len(laws))
 	ollama, err := vector.NewOllama()
 	if err != nil {
 		panic(err)
 	}
 	milvus := repo.NewMilvus(ollama)
 
-	err = milvus.Store(context.Background(), laws)
+	findContent, err := milvus.Search(context.Background(), "最低工资")
 	if err != nil {
 		panic(err)
 	}
-	findContent, err := milvus.Search(context.Background(), "解除劳动合同")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%+v", findContent)
+	findContent.Print()
 }

@@ -2,6 +2,8 @@ package repo
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"self-lawyer/document_parser"
 
 	"github.com/milvus-io/milvus-sdk-go/v2/client"
@@ -19,11 +21,13 @@ type Milvus struct {
 
 func NewMilvus(vector Vector) *Milvus {
 	// Connect to Milvus
-	client := InitCollection(context.Background())
-	return &Milvus{
+	client := GetClient(context.Background())
+	m := &Milvus{
 		client: client,
 		vector: vector,
 	}
+	m.InitCollection(context.Background())
+	return m
 }
 
 func (m *Milvus) Store(ctx context.Context, laws document_parser.Laws) error {
@@ -44,7 +48,7 @@ func (m *Milvus) Store(ctx context.Context, laws document_parser.Laws) error {
 		}
 	}
 	// Insert vector to Milvus
-	_, err := m.client.Insert(
+	rst, err := m.client.Insert(
 		ctx,
 		collectionName,
 		"",
@@ -55,10 +59,32 @@ func (m *Milvus) Store(ctx context.Context, laws document_parser.Laws) error {
 	if err != nil {
 		return err
 	}
+	log.Printf("Inserted %d rows\n", rst.Len())
 	return m.client.Flush(ctx, collectionName, false)
 }
 
-func (m *Milvus) Search(ctx context.Context, content string) (document_parser.Laws, error) {
+type ContentResult struct {
+	Content string
+	ID      int64
+}
+
+type SearchResult struct {
+	Title   string
+	Content []ContentResult
+}
+
+type SearchResults []SearchResult
+
+func (s SearchResults) Print() {
+	for _, result := range s {
+		fmt.Println(result.Title)
+		for _, content := range result.Content {
+			fmt.Printf("\tid: %d, content: %s\n", content.ID, content.Content)
+		}
+	}
+}
+
+func (m *Milvus) Search(ctx context.Context, content string) (SearchResults, error) {
 	// Embed content
 	embedding, err := m.vector.Embed(ctx, content)
 	if err != nil {
@@ -78,17 +104,22 @@ func (m *Milvus) Search(ctx context.Context, content string) (document_parser.La
 		[]entity.Vector{entity.FloatVector(embedding)},
 		embeddingCol,
 		entity.L2,
-		10,
+		16,
 		sp,
 	)
 	if err != nil {
 		return nil, err
 	}
-	var laws []document_parser.Law
+	var searchResult []SearchResult
 	for _, row := range res {
+		id := row.Fields.GetColumn(idCol)
 		title := row.Fields.GetColumn(titleCol)
 		content := row.Fields.GetColumn(contentCol)
 		for i := 0; i < title.Len(); i++ {
+			d, err := id.GetAsInt64(i)
+			if err != nil {
+				return nil, err
+			}
 			t, err := title.GetAsString(i)
 			if err != nil {
 				return nil, err
@@ -97,11 +128,15 @@ func (m *Milvus) Search(ctx context.Context, content string) (document_parser.La
 			if err != nil {
 				return nil, err
 			}
-			laws = append(laws, document_parser.Law{
-				Title:   t,
-				Content: []string{c},
-			})
+			if len(searchResult) > 0 && searchResult[len(searchResult)-1].Title == t {
+				searchResult[len(searchResult)-1].Content = append(searchResult[len(searchResult)-1].Content, ContentResult{Content: c, ID: d})
+			} else {
+				searchResult = append(searchResult, SearchResult{
+					Title:   t,
+					Content: []ContentResult{{Content: c, ID: d}},
+				})
+			}
 		}
 	}
-	return laws, nil
+	return searchResult, nil
 }

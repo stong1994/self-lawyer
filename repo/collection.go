@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"log"
+	"self-lawyer/document_parser"
 	"time"
 
 	"github.com/milvus-io/milvus-sdk-go/v2/client"
@@ -19,8 +20,7 @@ const (
 	idCol, titleCol, contentCol, embeddingCol = "id", "title", "content", "embedding"
 )
 
-// basic milvus operation example
-func InitCollection(ctx context.Context) client.Client {
+func GetClient(ctx context.Context) client.Client {
 	// setup context for client creation, use 10 seconds here
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
@@ -32,8 +32,12 @@ func InitCollection(ctx context.Context) client.Client {
 		// handling error and exit, to make example simple here
 		log.Fatal("failed to connect to milvus:", err.Error())
 	}
+	return c
+}
 
-	dbs, err := c.ListDatabases(ctx)
+// basic milvus operation example
+func (m *Milvus) InitCollection(ctx context.Context) {
+	dbs, err := m.client.ListDatabases(ctx)
 	if err != nil {
 		log.Fatal("failed to list databases:", err.Error())
 	}
@@ -44,24 +48,27 @@ func InitCollection(ctx context.Context) client.Client {
 		}
 	}
 	if !exists {
-		err = c.CreateDatabase(ctx, "self_lawyer")
+		err = m.client.CreateDatabase(ctx, "self_lawyer")
 		if err != nil {
 			log.Fatal("failed to create database:", err.Error())
 		}
 	}
-	err = c.UsingDatabase(ctx, "self_lawyer")
+	err = m.client.UsingDatabase(ctx, "self_lawyer")
 	if err != nil {
 		log.Fatal("failed to use database:", err.Error())
 	}
 
 	// first, lets check the collection exists
-	collExists, err := c.HasCollection(ctx, collectionName)
+	collExists, err := m.client.HasCollection(ctx, collectionName)
 	if err != nil {
 		log.Fatal("failed to check collection exists:", err.Error())
 	}
 	if collExists {
-		return c
+		if err = m.client.LoadCollection(ctx, collectionName, false); err != nil {
+			log.Fatal("failed to load collection:", err.Error())
+		}
 	}
+	log.Println("initializing collection...")
 
 	// define collection schema
 	schema := entity.NewSchema().WithName(collectionName).WithDescription("law data collection").
@@ -73,7 +80,7 @@ func InitCollection(ctx context.Context) client.Client {
 		// also the vector field is needed
 		WithField(entity.NewField().WithName(embeddingCol).WithDataType(entity.FieldTypeFloatVector).WithDim(dim))
 
-	err = c.CreateCollection(ctx, schema, entity.DefaultShardNumber)
+	err = m.client.CreateCollection(ctx, schema, entity.DefaultShardNumber)
 	if err != nil {
 		log.Fatal("failed to create collection:", err.Error())
 	}
@@ -83,9 +90,18 @@ func InitCollection(ctx context.Context) client.Client {
 		"ef":             "20",
 		"metric_type":    "L2",
 	}
-	err = c.CreateIndex(ctx, collectionName, embeddingCol, entity.NewGenericIndex("idx_embedding", entity.HNSW, params), false)
+	err = m.client.CreateIndex(ctx, collectionName, embeddingCol, entity.NewGenericIndex("idx_embedding", entity.HNSW, params), false)
 	if err != nil {
 		log.Fatal("failed to create index:", err.Error())
 	}
-	return c
+	if err = m.client.LoadCollection(ctx, collectionName, false); err != nil {
+		log.Fatal("failed to load collection:", err.Error())
+	}
+	laws, err := document_parser.Parse()
+	if err != nil {
+		log.Fatal("failed to parse laws:", err.Error())
+	}
+	if err = m.Store(ctx, laws); err != nil {
+		log.Fatal("failed to fill data:", err.Error())
+	}
 }
