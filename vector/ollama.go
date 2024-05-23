@@ -9,16 +9,29 @@ import (
 
 type Ollama struct {
 	llm *ollama.LLM
+	dim int
 }
 
-func NewOllama() (*Ollama, error) {
-	llm, err := ollama.New(ollama.WithModel("nomic-embed-text:v1.5"))
+func (o *Ollama) GetDim() int {
+	return o.dim
+}
+
+func NewOllama() *Ollama {
+	// llm, err := ollama.New(ollama.WithModel("nomic-embed-text:v1.5"))
+	llm, err := ollama.New(ollama.WithModel("llama3"))
 	if err != nil {
 		log.Fatal(err)
 	}
-	return &Ollama{
+
+	o := &Ollama{
 		llm: llm,
-	}, nil
+	}
+	data, err := o.Embed(context.Background(), "hello")
+	if err != nil {
+		log.Fatal(err)
+	}
+	o.dim = len(data)
+	return o
 }
 
 func (o *Ollama) Embed(ctx context.Context, content string) ([]float32, error) {

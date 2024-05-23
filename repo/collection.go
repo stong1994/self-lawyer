@@ -16,7 +16,6 @@ const (
 
 	dbName                                    = "self_lawyer"
 	collectionName                            = `laws`
-	dim                                       = 768
 	idCol, titleCol, contentCol, embeddingCol = "id", "title", "content", "embedding"
 )
 

@@ -12,6 +12,7 @@ import (
 
 type Vector interface {
 	Embed(ctx context.Context, content string) ([]float32, error)
+	GetDim() int
 }
 
 type Milvus struct {
@@ -54,7 +55,7 @@ func (m *Milvus) Store(ctx context.Context, laws document_parser.Laws) error {
 		"",
 		entity.NewColumnVarChar(titleCol, titles),
 		entity.NewColumnVarChar(contentCol, contents),
-		entity.NewColumnFloatVector(embeddingCol, dim, embeddings),
+		entity.NewColumnFloatVector(embeddingCol, m.vector.GetDim(), embeddings),
 	)
 	if err != nil {
 		return err

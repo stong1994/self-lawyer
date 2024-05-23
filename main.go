@@ -16,10 +16,7 @@ func main() {
 	// laws.Print()
 	_ = laws
 	fmt.Println("got laws ", len(laws))
-	ollama, err := vector.NewOllama()
-	if err != nil {
-		panic(err)
-	}
+	ollama := vector.NewOllama()
 	milvus := repo.NewMilvus(ollama)
 
 	findContent, err := milvus.Search(context.Background(), "最低工资")
