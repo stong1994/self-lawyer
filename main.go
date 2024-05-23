@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -17,7 +18,18 @@ func main() {
 
 	log.Println("starting chating server")
 	chat := chat.NewOllama(milvus)
+	serve(chat)
+}
 
+type chatRequest struct {
+	Question string `json:"question"`
+}
+
+type chatResponse struct {
+	Answer string `json:"answer"`
+}
+
+func serve(chat *chat.Ollama) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/chat", func(w http.ResponseWriter, r *http.Request) {
 		bytes, err := io.ReadAll(r.Body)
@@ -26,14 +38,36 @@ func main() {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		answer, err := chat.Complete(r.Context(), string(bytes))
+		var req chatRequest
+		if err = json.Unmarshal(bytes, &req); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
+			return
+		}
+
+		answer, err := chat.Complete(r.Context(), req.Question)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		w.Write([]byte(answer))
+
+		res, _ := json.Marshal(chatResponse{Answer: answer})
+		w.Write(res)
 	})
+
 	log.Println("listen server on :8888")
-	http.ListenAndServe(":8888", mux)
+	http.ListenAndServe(":8888", corsMiddleware(mux))
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		if r.Method == "OPTIONS" {
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }

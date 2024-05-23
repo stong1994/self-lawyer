@@ -18,6 +18,19 @@ go mod tidy
 go run main.go
 ```
 
+## 使用
+
+1. 通过终端访问
+
+```
+curl -XPOST http://localhost:8888/chat -d '{"question":"公司没有按照合同发放工资"}'
+```
+
+2. 通过web页面访问
+   1. 启动web服务
+      `cd app && npm start`
+   2. 输入问题，点击发送
+
 ## 文件来源
 
 法律文件来自[risshun/Chinese_Laws](https://github.com/risshun/Chinese_Laws)
