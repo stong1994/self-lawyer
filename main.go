@@ -2,22 +2,13 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"self-lawyer/chat"
-	"self-lawyer/document_parser"
 	"self-lawyer/repo"
 	"self-lawyer/vector"
 )
 
 func main() {
-	laws, err := document_parser.Parse()
-	if err != nil {
-		panic(err)
-	}
-	// laws.Print()
-	_ = laws
-	fmt.Println("got laws ", len(laws))
 	ollama := vector.NewOllama()
 	milvus := repo.NewMilvus(ollama)
 
