@@ -66,6 +66,7 @@ func (m *Milvus) InitCollection(ctx context.Context) {
 		if err = m.client.LoadCollection(ctx, collectionName, false); err != nil {
 			log.Fatal("failed to load collection:", err.Error())
 		}
+		return
 	}
 	log.Println("initializing collection...")
 
@@ -77,7 +78,7 @@ func (m *Milvus) InitCollection(ctx context.Context) {
 		WithField(entity.NewField().WithName(titleCol).WithDataType(entity.FieldTypeVarChar).WithMaxLength(50)).
 		WithField(entity.NewField().WithName(contentCol).WithDataType(entity.FieldTypeVarChar).WithMaxLength(1024)).
 		// also the vector field is needed
-		WithField(entity.NewField().WithName(embeddingCol).WithDataType(entity.FieldTypeFloatVector).WithDim(dim))
+		WithField(entity.NewField().WithName(embeddingCol).WithDataType(entity.FieldTypeFloatVector).WithDim(int64(m.vector.GetDim())))
 
 	err = m.client.CreateCollection(ctx, schema, entity.DefaultShardNumber)
 	if err != nil {

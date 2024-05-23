@@ -74,6 +74,14 @@ type SearchResult struct {
 	Content []ContentResult
 }
 
+func (s SearchResult) GetContents() []string {
+	cs := make([]string, 0, len(s.Content))
+	for _, c := range s.Content {
+		cs = append(cs, c.Content)
+	}
+	return cs
+}
+
 type SearchResults []SearchResult
 
 func (s SearchResults) Print() {
