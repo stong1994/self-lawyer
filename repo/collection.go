@@ -34,6 +34,39 @@ func GetClient(ctx context.Context) client.Client {
 	return c
 }
 
+func (m *Milvus) DropDatabase(ctx context.Context) {
+	dbs, err := m.client.ListDatabases(ctx)
+	if err != nil {
+		log.Fatal("failed to list databases:", err.Error())
+	}
+	exists := false
+	for _, db := range dbs {
+		if db.Name == dbName {
+			exists = true
+		}
+	}
+	if !exists {
+		log.Println("no need to clean database as it's not exist")
+		return
+	}
+	err = m.client.UsingDatabase(ctx, dbName)
+	if err != nil {
+		log.Fatal("failed to use database:", err.Error())
+	}
+	colls, err := m.client.ListCollections(ctx)
+	if err != nil {
+		log.Fatal("got collections failed", err.Error())
+	}
+	for _, coll := range colls {
+		m.client.DropCollection(ctx, coll.Name)
+	}
+	err = m.client.DropDatabase(ctx, dbName)
+	if err != nil {
+		log.Fatal("drop database failed", err.Error())
+	}
+	log.Println("clean database done")
+}
+
 // basic milvus operation example
 func (m *Milvus) InitCollection(ctx context.Context) {
 	dbs, err := m.client.ListDatabases(ctx)
@@ -42,17 +75,17 @@ func (m *Milvus) InitCollection(ctx context.Context) {
 	}
 	exists := false
 	for _, db := range dbs {
-		if db.Name == "self_lawyer" {
+		if db.Name == dbName {
 			exists = true
 		}
 	}
 	if !exists {
-		err = m.client.CreateDatabase(ctx, "self_lawyer")
+		err = m.client.CreateDatabase(ctx, dbName)
 		if err != nil {
 			log.Fatal("failed to create database:", err.Error())
 		}
 	}
-	err = m.client.UsingDatabase(ctx, "self_lawyer")
+	err = m.client.UsingDatabase(ctx, dbName)
 	if err != nil {
 		log.Fatal("failed to use database:", err.Error())
 	}

@@ -18,7 +18,7 @@ func main() {
 
 	log.Println("starting chating server")
 	chat := chat.NewOllama(milvus)
-	serve(chat)
+	serve(chat, milvus)
 }
 
 type chatRequest struct {
@@ -29,7 +29,7 @@ type chatResponse struct {
 	Answer string `json:"answer"`
 }
 
-func serve(chat *chat.Ollama) {
+func serve(chat *chat.Ollama, milvus *repo.Milvus) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/chat", func(w http.ResponseWriter, r *http.Request) {
 		bytes, err := io.ReadAll(r.Body)
@@ -54,6 +54,9 @@ func serve(chat *chat.Ollama) {
 
 		res, _ := json.Marshal(chatResponse{Answer: answer})
 		w.Write(res)
+	})
+	mux.HandleFunc("/clean_all", func(w http.ResponseWriter, r *http.Request) {
+		milvus.DropDatabase(r.Context())
 	})
 
 	log.Println("listen server on :8888")
