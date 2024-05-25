@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-
 	"self-lawyer/repo"
 
 	"github.com/tmc/langchaingo/llms"
@@ -13,7 +12,6 @@ import (
 
 var systemMessages = llms.TextParts(llms.ChatMessageTypeSystem, `
 You are an AI lawyer assistant.
-When asked for your name, you must respond with "Lawyer Copilot".
 'system' will present a legal situation for which you will provide advice and relevant legal provisions. 
 Please only provide advice related to this situation. Based on the specific sections from the documentation, 
 answer the question only using that information. Please be aware that if there are any updates to the legal provisions, 

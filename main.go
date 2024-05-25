@@ -26,10 +26,6 @@ type chatRequest struct {
 	Question string `json:"question"`
 }
 
-type chatResponse struct {
-	Answer string `json:"answer"`
-}
-
 func serve(chat *chat.Ollama, milvus *repo.Milvus) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/chat", func(w http.ResponseWriter, r *http.Request) {
