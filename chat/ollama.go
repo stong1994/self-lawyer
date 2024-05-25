@@ -3,8 +3,8 @@ package chat
 import (
 	"context"
 	"encoding/json"
-	"io"
 	"log"
+
 	"self-lawyer/repo"
 
 	"github.com/tmc/langchaingo/llms"
@@ -68,7 +68,7 @@ func (o *Ollama) jointAIMessage(answer string) []llms.MessageContent {
 	return o.chatHistory
 }
 
-func (o *Ollama) Complete(ctx context.Context, problem string, writer io.Writer) error {
+func (o *Ollama) Complete(ctx context.Context, problem string, writer func(chunk []byte) error) error {
 	laws, err := o.searchEngine.Search(ctx, problem)
 	if err != nil {
 		return err
@@ -80,8 +80,7 @@ func (o *Ollama) Complete(ctx context.Context, problem string, writer io.Writer)
 		ctx,
 		messages,
 		llms.WithStreamingFunc(func(ctx context.Context, chunk []byte) error {
-			data := []byte("data: " + string(chunk) + "\n\n")
-			_, err = writer.Write(data)
+			err = writer(chunk)
 			if err != nil {
 				return err
 			}

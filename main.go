@@ -51,18 +51,19 @@ func serve(chat *chat.Ollama, milvus *repo.Milvus) {
 			return
 		}
 
-		err = chat.Complete(r.Context(), req.Question, w)
+		err = chat.Complete(r.Context(), req.Question, func(chunk []byte) error {
+			fmt.Fprintf(w, "data: %s\n\n", string(chunk))
+			flusher, ok := w.(http.Flusher)
+			if !ok {
+				// The ResponseWriter doesn't support the Flusher interface, so we can't stream
+				return nil
+			}
+			flusher.Flush()
+			return nil
+		})
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
-			return
-		}
-
-		// Flush the response writer to send the message immediately
-		if f, ok := w.(http.Flusher); ok {
-			f.Flush()
-		} else {
-			fmt.Println("Unable to cast to http.Flusher")
 			return
 		}
 	})
