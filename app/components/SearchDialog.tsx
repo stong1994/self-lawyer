@@ -121,7 +121,7 @@ export function SearchDialog() {
         headers: {
           "Content-Type": "application/json",
         },
-        payload: JSON.stringify({ query }),
+        payload: JSON.stringify({ question: query }),
       });
 
       function handleError<T>(err: T) {
@@ -144,8 +144,9 @@ export function SearchDialog() {
 
           // 应该在代码顶部放置断言，以确保 `e.data` 符合 `string` 类型
           // 另外，请注意，使用类型断言会带来运行时错误的风险，因此对于不确定类型的值，请确保进行有效的类型验证
-          const completionResponse = JSON.parse(e.data);
-          const text = completionResponse.choices[0].delta?.content || "";
+          // const completionResponse = JSON.parse(e.data);
+          // const text = completionResponse.choices[0].delta?.content || "";
+          const text = e.data;
 
           setAnswer((answer) => {
             const currentAnswer = answer ?? "";
