@@ -266,7 +266,6 @@ export function SearchDialog() {
                   <span className="bg-green-500 p-2 w-8 h-8 rounded-full text-center flex items-center justify-center">
                     <Wand width={18} className="text-white" />
                   </span>
-                  <h3 className="font-semibold">Answer:</h3>
                   {answer}
                 </div>
               ) : null}
@@ -294,9 +293,9 @@ export function SearchDialog() {
                   hover:bg-slate-100 dark:hover:bg-gray-600
                   rounded border border-slate-200 dark:border-slate-600
                   transition-colors"
-                  onClick={(_) => setSearch("离婚需要双方同意吗？")}
+                  onClick={(_) => setSearch("公司未按期支付工资怎么办？")}
                 >
-                  离婚需要双方同意吗？
+                  公司未按期支付工资怎么办？
                 </button>
                 <button
                   type="button"
@@ -306,10 +305,10 @@ export function SearchDialog() {
                   rounded border border-slate-200 dark:border-slate-600
                   transition-colors"
                   onClick={(_) =>
-                    setSearch("民间借贷受国家保护的合法利息是多少？")
+                    setSearch("公司破产后员工还能获得裁员赔偿吗？")
                   }
                 >
-                  民间借贷受国家保护的合法利息是多少？
+                  公司破产后员工还能获得裁员赔偿吗？
                 </button>
                 <button
                   type="button"
@@ -318,9 +317,11 @@ export function SearchDialog() {
                   hover:bg-slate-100 dark:hover:bg-gray-600
                   rounded border border-slate-200 dark:border-slate-600
                   transition-colors"
-                  onClick={(_) => setSearch("欠了信用卡的钱还不上要坐牢吗？")}
+                  onClick={(_) =>
+                    setSearch("公司需要按照工资总额支付五险一金吗？")
+                  }
                 >
-                  欠了信用卡的钱还不上要坐牢吗？
+                  公司需要按照工资总额支付五险一金吗？
                 </button>
               </div>
             </div>
