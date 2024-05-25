@@ -6,19 +6,27 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"self-lawyer/chat"
 	"self-lawyer/repo"
 	"self-lawyer/vector"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	log.Println("connecting ollama")
-	ollama := vector.NewOllama()
+	ollama := vector.NewOllama(vector.OptionSetModel(os.Getenv("EMBEDDING_MODEL")))
 	log.Println("connecting milvus")
 	milvus := repo.NewMilvus(ollama)
 
 	log.Println("starting chating server")
-	chat := chat.NewOllama(milvus)
+	chat := chat.NewOllama(milvus, chat.OptionSetModel(os.Getenv("COMPLETING_MODEL")))
 	serve(chat, milvus)
 }
 
