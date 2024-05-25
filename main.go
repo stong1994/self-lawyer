@@ -71,8 +71,10 @@ func serve(chat *chat.Ollama, milvus *repo.Milvus) {
 			return
 		}
 	})
-	mux.HandleFunc("/clean_all", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/reset_all", func(w http.ResponseWriter, r *http.Request) {
 		milvus.DropDatabase(r.Context())
+		milvus.InitCollection(r.Context())
+		w.Write([]byte("ok"))
 	})
 
 	log.Println("listen server on :8888")
