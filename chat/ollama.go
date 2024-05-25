@@ -3,6 +3,7 @@ package chat
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log"
 	"self-lawyer/repo"
 
@@ -67,17 +68,28 @@ func (o *Ollama) jointAIMessage(answer string) []llms.MessageContent {
 	return o.chatHistory
 }
 
-func (o *Ollama) Complete(ctx context.Context, problem string) (string, error) {
+func (o *Ollama) Complete(ctx context.Context, problem string, writer io.Writer) error {
 	laws, err := o.searchEngine.Search(ctx, problem)
 	if err != nil {
-		return "", err
+		return err
 	}
 	messages := o.jointUserMessage(problem, laws)
 	log.Printf("completing, request message: %+v", messages)
 	log.Print("completing, please wait...")
-	res, err := o.llm.GenerateContent(ctx, messages)
+	res, err := o.llm.GenerateContent(
+		ctx,
+		messages,
+		llms.WithStreamingFunc(func(ctx context.Context, chunk []byte) error {
+			data := []byte("data: " + string(chunk) + "\n\n")
+			_, err = writer.Write(data)
+			if err != nil {
+				return err
+			}
+			log.Println("streaming chunk: ", string(chunk))
+			return nil
+		}))
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	log.Print("got choices")
@@ -86,8 +98,8 @@ func (o *Ollama) Complete(ctx context.Context, problem string) (string, error) {
 	}
 	if len(res.Choices) > 0 {
 		o.jointAIMessage(res.Choices[0].Content)
-		return res.Choices[0].Content, nil
+		return nil
 	}
 	// TODO: return error
-	return "", nil
+	return nil
 }

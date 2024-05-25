@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -32,12 +33,17 @@ type chatResponse struct {
 func serve(chat *chat.Ollama, milvus *repo.Milvus) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/chat", func(w http.ResponseWriter, r *http.Request) {
+		// Set the necessary headers for SSE
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
 		bytes, err := io.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
+		log.Println("question", string(bytes))
 		var req chatRequest
 		if err = json.Unmarshal(bytes, &req); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -45,15 +51,20 @@ func serve(chat *chat.Ollama, milvus *repo.Milvus) {
 			return
 		}
 
-		answer, err := chat.Complete(r.Context(), req.Question)
+		err = chat.Complete(r.Context(), req.Question, w)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
 			return
 		}
 
-		res, _ := json.Marshal(chatResponse{Answer: answer})
-		w.Write(res)
+		// Flush the response writer to send the message immediately
+		if f, ok := w.(http.Flusher); ok {
+			f.Flush()
+		} else {
+			fmt.Println("Unable to cast to http.Flusher")
+			return
+		}
 	})
 	mux.HandleFunc("/clean_all", func(w http.ResponseWriter, r *http.Request) {
 		milvus.DropDatabase(r.Context())
