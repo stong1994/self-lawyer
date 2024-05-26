@@ -1,6 +1,11 @@
 # self-lawyer
 
-基于ollma大模型构建私人律师.
+基于ollama大模型构建私人律师.
+
+## 原理
+
+![](https://github.com/datawhalechina/llm-universe/raw/main/figures/C1-3-langchain.png)
+[图片来源](https://github.com/datawhalechina/llm-universe/blob/main/notebook/C1%20%E5%A4%A7%E5%9E%8B%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B%20LLM%20%E4%BB%8B%E7%BB%8D/3.LangChain%20%E7%AE%80%E4%BB%8B.md)
 
 ## 安装步骤
 
@@ -10,6 +15,10 @@
    按照[官方文档](https://github.com/ollama/ollama)安装。
 3. 安装milvus
    按照[官方文档](https://milvus.io/docs/install_standalone-docker.md)安装，推荐使用docker。
+4. 下载大语言模型
+   本项目使用了大语言模型的embedding能力以及completing能力，这两种能力的实现可以使用同一个大语言模型，也可以使用两种大语言模型。
+   - embedding能力默认使用"nomic-embed-text:v1.5", 通过命令`ollama pull nomic-embed-text:v1.5`下载.
+   - completing能力默认使用"llama3", 通过命令`ollama pull llama3`下载.
 
 ## 启动
 
@@ -31,10 +40,10 @@ curl -XPOST http://localhost:8888/chat -d '{"question":"公司没有按照合同
       `cd app && npm start`
    2. 输入问题，点击发送
 
-## 清空系统
+## 重置系统
 
 ```
-curl -X POST http://localhost:8888/clean_all
+curl -X POST http://localhost:8888/reset_all
 ```
 
 ```
