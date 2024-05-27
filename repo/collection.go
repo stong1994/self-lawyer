@@ -14,9 +14,9 @@ const (
 	// Milvus instance proxy address, may verify in your env/settings
 	milvusAddr = `localhost:19530`
 
-	dbName                                    = "self_lawyer"
-	collectionName                            = `laws`
-	idCol, titleCol, contentCol, embeddingCol = "id", "title", "content", "embedding"
+	dbName                                      = "self_lawyer"
+	collectionName                              = `laws`
+	idCol, chapterCol, contentCol, embeddingCol = "id", "chapter", "content", "embedding"
 )
 
 func GetClient(ctx context.Context) client.Client {
@@ -108,7 +108,7 @@ func (m *Milvus) InitCollection(ctx context.Context) {
 		// currently primary key field is compulsory, and only int64 is allowed
 		WithField(entity.NewField().WithName(idCol).WithDataType(entity.FieldTypeInt64).WithIsPrimaryKey(true).WithIsAutoID(true)).
 		// title and content
-		WithField(entity.NewField().WithName(titleCol).WithDataType(entity.FieldTypeVarChar).WithMaxLength(50)).
+		WithField(entity.NewField().WithName(chapterCol).WithDataType(entity.FieldTypeVarChar).WithMaxLength(50)).
 		WithField(entity.NewField().WithName(contentCol).WithDataType(entity.FieldTypeVarChar).WithMaxLength(1024)).
 		// also the vector field is needed
 		WithField(entity.NewField().WithName(embeddingCol).WithDataType(entity.FieldTypeFloatVector).WithDim(int64(m.vector.GetDim())))

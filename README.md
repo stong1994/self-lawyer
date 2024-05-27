@@ -24,7 +24,7 @@
 
 ```
 go mod tidy
-go run main.go
+go run ./cmd/server/main.go
 ```
 
 ## 使用

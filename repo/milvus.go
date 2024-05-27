@@ -33,15 +33,15 @@ func NewMilvus(vector Vector) *Milvus {
 
 func (m *Milvus) Store(ctx context.Context, laws document_parser.Laws) error {
 	var (
-		titles     []string
-		contents   []string
+		chapters   []string
+		items      []string
 		embeddings [][]float32
 	)
 	for _, law := range laws {
-		for _, content := range law.Content {
-			titles = append(titles, law.Title)
-			contents = append(contents, content)
-			embedding, err := m.vector.Embed(ctx, content)
+		for _, item := range law.Items {
+			chapters = append(chapters, law.Chapter)
+			items = append(items, item.Content)
+			embedding, err := m.vector.Embed(ctx, item.Content)
 			if err != nil {
 				return err
 			}
@@ -53,8 +53,8 @@ func (m *Milvus) Store(ctx context.Context, laws document_parser.Laws) error {
 		ctx,
 		collectionName,
 		"",
-		entity.NewColumnVarChar(titleCol, titles),
-		entity.NewColumnVarChar(contentCol, contents),
+		entity.NewColumnVarChar(chapterCol, chapters),
+		entity.NewColumnVarChar(contentCol, items),
 		entity.NewColumnFloatVector(embeddingCol, m.vector.GetDim(), embeddings),
 	)
 	if err != nil {
@@ -70,7 +70,7 @@ type ContentResult struct {
 }
 
 type SearchResult struct {
-	Title   string
+	Chapter string
 	Content []ContentResult
 }
 
@@ -86,7 +86,7 @@ type SearchResults []SearchResult
 
 func (s SearchResults) Print() {
 	for _, result := range s {
-		fmt.Println(result.Title)
+		fmt.Println(result.Chapter)
 		for _, content := range result.Content {
 			fmt.Printf("\tid: %d, content: %s\n", content.ID, content.Content)
 		}
@@ -109,7 +109,7 @@ func (m *Milvus) Search(ctx context.Context, content string) (SearchResults, err
 		collectionName,
 		nil,
 		"",
-		[]string{idCol, titleCol, contentCol, embeddingCol},
+		[]string{idCol, chapterCol, contentCol, embeddingCol},
 		[]entity.Vector{entity.FloatVector(embedding)},
 		embeddingCol,
 		entity.L2,
@@ -122,14 +122,14 @@ func (m *Milvus) Search(ctx context.Context, content string) (SearchResults, err
 	var searchResult []SearchResult
 	for _, row := range res {
 		id := row.Fields.GetColumn(idCol)
-		title := row.Fields.GetColumn(titleCol)
+		chapter := row.Fields.GetColumn(chapterCol)
 		content := row.Fields.GetColumn(contentCol)
-		for i := 0; i < title.Len(); i++ {
+		for i := 0; i < chapter.Len(); i++ {
 			d, err := id.GetAsInt64(i)
 			if err != nil {
 				return nil, err
 			}
-			t, err := title.GetAsString(i)
+			t, err := chapter.GetAsString(i)
 			if err != nil {
 				return nil, err
 			}
@@ -137,11 +137,11 @@ func (m *Milvus) Search(ctx context.Context, content string) (SearchResults, err
 			if err != nil {
 				return nil, err
 			}
-			if len(searchResult) > 0 && searchResult[len(searchResult)-1].Title == t {
+			if len(searchResult) > 0 && searchResult[len(searchResult)-1].Chapter == t {
 				searchResult[len(searchResult)-1].Content = append(searchResult[len(searchResult)-1].Content, ContentResult{Content: c, ID: d})
 			} else {
 				searchResult = append(searchResult, SearchResult{
-					Title:   t,
+					Chapter: t,
 					Content: []ContentResult{{Content: c, ID: d}},
 				})
 			}
