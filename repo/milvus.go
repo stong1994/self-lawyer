@@ -113,7 +113,7 @@ func (m *Milvus) Search(ctx context.Context, content string) (SearchResults, err
 		[]entity.Vector{entity.FloatVector(embedding)},
 		embeddingCol,
 		entity.L2,
-		5,
+		10,
 		sp,
 	)
 	if err != nil {
