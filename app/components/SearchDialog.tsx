@@ -314,7 +314,7 @@ export function SearchDialog() {
                     setSearch("公司需要按照工资总额支付五险一金吗？")
                   }
                 >
-                  公司需要按照工资总额支付五险一金吗？
+                  试用期最长几个月？
                 </button>
               </div>
             </div>
