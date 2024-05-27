@@ -37,7 +37,7 @@ curl -XPOST http://localhost:8888/chat -d '{"question":"公司没有按照合同
 
 2. 通过web页面访问
    1. 启动web服务
-      `cd app && npm start`
+      `cd app && npm run dev`
    2. 输入问题，点击发送
 
 ## 重置系统
