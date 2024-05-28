@@ -2,9 +2,10 @@ package chat
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"log"
 	"self-lawyer/repo"
+	"strings"
 
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/llms/ollama"
@@ -31,8 +32,8 @@ func OptionSetModel(model string) Option {
 }
 
 type Ollama struct {
-	llm          *ollama.LLM
 	model        string
+	llm          *ollama.LLM
 	searchEngine SearchEngine
 	chatHistory  []llms.MessageContent
 }
@@ -63,15 +64,24 @@ func (o *Ollama) fillDefaultConfig() {
 	}
 }
 
+func msgSendToAI(sr repo.SearchResults) string {
+	var contents []string
+	for _, chapter := range sr {
+		for _, item := range chapter.Content {
+			contents = append(contents, fmt.Sprintf("%s %s", chapter.Chapter, item.Content))
+		}
+	}
+	return strings.Join(contents, " ")
+}
+
 func (o *Ollama) jointUserMessage(problem string, relatedLaws repo.SearchResults) []llms.MessageContent {
 	o.chatHistory = append(o.chatHistory, llms.MessageContent{
 		Role:  llms.ChatMessageTypeHuman,
 		Parts: []llms.ContentPart{llms.TextPart(problem)},
 	})
-	text, _ := json.Marshal(relatedLaws)
 	systemMessage := llms.MessageContent{
 		Role:  llms.ChatMessageTypeSystem,
-		Parts: []llms.ContentPart{llms.TextPart(string(text))},
+		Parts: []llms.ContentPart{llms.TextPart(msgSendToAI(relatedLaws))},
 	}
 	o.chatHistory = append(o.chatHistory, systemMessage)
 
