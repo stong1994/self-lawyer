@@ -13,10 +13,8 @@ import (
 
 var systemMessages = llms.TextParts(llms.ChatMessageTypeSystem, `
 You are an AI lawyer assistant.
-'system' will present a legal situation for which you will provide advice and relevant legal provisions. 
-Please only provide advice related to this situation. Based on the specific sections from the documentation, 
-answer the question only using that information. Please be aware that if there are any updates to the legal provisions, 
-please reference the most current content. Your output must be in Chinese. If you are uncertain or the answer is not 
+'system' will provide multi law items, you should filter the most related laws to the user's question. 
+Your output must be in Chinese. If you are uncertain or the answer is not 
 explicitly written in the documentation, please respond with "I'm sorry, I cannot assist with this.`)
 
 type SearchEngine interface {
@@ -35,13 +33,13 @@ type Ollama struct {
 	model        string
 	llm          *ollama.LLM
 	searchEngine SearchEngine
-	chatHistory  []llms.MessageContent
+	// chatHistory  []llms.MessageContent
 }
 
 func NewOllama(searchEngine SearchEngine, opts ...Option) *Ollama {
 	o := &Ollama{
 		searchEngine: searchEngine,
-		chatHistory:  []llms.MessageContent{systemMessages},
+		// chatHistory:  []llms.MessageContent{systemMessages},
 	}
 	for _, opt := range opts {
 		opt(o)
@@ -75,25 +73,17 @@ func msgSendToAI(sr repo.SearchResults) string {
 }
 
 func (o *Ollama) jointUserMessage(problem string, relatedLaws repo.SearchResults) []llms.MessageContent {
-	o.chatHistory = append(o.chatHistory, llms.MessageContent{
-		Role:  llms.ChatMessageTypeHuman,
-		Parts: []llms.ContentPart{llms.TextPart(problem)},
-	})
-	systemMessage := llms.MessageContent{
-		Role:  llms.ChatMessageTypeSystem,
-		Parts: []llms.ContentPart{llms.TextPart(msgSendToAI(relatedLaws))},
+	return []llms.MessageContent{
+		systemMessages,
+		{
+			Role:  llms.ChatMessageTypeSystem,
+			Parts: []llms.ContentPart{llms.TextPart(msgSendToAI(relatedLaws))},
+		},
+		{
+			Role:  llms.ChatMessageTypeHuman,
+			Parts: []llms.ContentPart{llms.TextPart(problem)},
+		},
 	}
-	o.chatHistory = append(o.chatHistory, systemMessage)
-
-	return o.chatHistory
-}
-
-func (o *Ollama) jointAIMessage(answer string) []llms.MessageContent {
-	o.chatHistory = append(o.chatHistory, llms.MessageContent{
-		Role:  llms.ChatMessageTypeAI,
-		Parts: []llms.ContentPart{llms.TextPart(answer)},
-	})
-	return o.chatHistory
 }
 
 func (o *Ollama) Complete(ctx context.Context, problem string, writer func(chunk []byte) error) error {
@@ -122,10 +112,6 @@ func (o *Ollama) Complete(ctx context.Context, problem string, writer func(chunk
 	log.Print("got choices")
 	for i, choice := range res.Choices {
 		log.Printf("\tchoice %d: content: %s, stop reason: %s", i, choice.Content, choice.StopReason)
-	}
-	if len(res.Choices) > 0 {
-		o.jointAIMessage(res.Choices[0].Content)
-		return nil
 	}
 	// TODO: return error
 	return nil

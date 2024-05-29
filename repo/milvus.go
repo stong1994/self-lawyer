@@ -65,8 +65,9 @@ func (m *Milvus) Store(ctx context.Context, laws document_parser.Laws) error {
 }
 
 type ContentResult struct {
-	Content string
-	ID      int64
+	Content  string
+	ID       int64
+	Distance float32
 }
 
 type SearchResult struct {
@@ -88,7 +89,7 @@ func (s SearchResults) Print() {
 	for _, result := range s {
 		fmt.Println(result.Chapter)
 		for _, content := range result.Content {
-			fmt.Printf("\tid: %d, content: %s\n", content.ID, content.Content)
+			fmt.Printf("\tid: %d, socre: %f, content: %s\n", content.ID, content.Distance, content.Content)
 		}
 	}
 }
@@ -99,7 +100,7 @@ func (m *Milvus) Search(ctx context.Context, content string) (SearchResults, err
 	if err != nil {
 		return nil, err
 	}
-	sp, err := entity.NewIndexHNSWSearchParam(16)
+	sp, err := entity.NewIndexHNSWSearchParam(10)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +113,7 @@ func (m *Milvus) Search(ctx context.Context, content string) (SearchResults, err
 		[]string{idCol, chapterCol, contentCol, embeddingCol},
 		[]entity.Vector{entity.FloatVector(embedding)},
 		embeddingCol,
-		entity.L2,
+		entity.COSINE,
 		10,
 		sp,
 	)
@@ -138,11 +139,11 @@ func (m *Milvus) Search(ctx context.Context, content string) (SearchResults, err
 				return nil, err
 			}
 			if len(searchResult) > 0 && searchResult[len(searchResult)-1].Chapter == t {
-				searchResult[len(searchResult)-1].Content = append(searchResult[len(searchResult)-1].Content, ContentResult{Content: c, ID: d})
+				searchResult[len(searchResult)-1].Content = append(searchResult[len(searchResult)-1].Content, ContentResult{Content: c, ID: d, Distance: row.Scores[i]})
 			} else {
 				searchResult = append(searchResult, SearchResult{
 					Chapter: t,
-					Content: []ContentResult{{Content: c, ID: d}},
+					Content: []ContentResult{{Content: c, ID: d, Distance: row.Scores[i]}},
 				})
 			}
 		}

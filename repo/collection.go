@@ -119,9 +119,9 @@ func (m *Milvus) InitCollection(ctx context.Context) {
 	}
 	params := map[string]string{
 		"M":              "16",
-		"efConstruction": "100",
+		"efConstruction": "96",
 		"ef":             "20",
-		"metric_type":    "L2",
+		"metric_type":    "COSINE",
 	}
 	err = m.client.CreateIndex(ctx, collectionName, embeddingCol, entity.NewGenericIndex("idx_embedding", entity.HNSW, params), false)
 	if err != nil {

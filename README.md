@@ -22,9 +22,23 @@
 
 ## 启动
 
+### 启动server
+
 ```
 go mod tidy
 go run ./cmd/server/main.go
+```
+
+### 只测试向量搜索
+
+```
+go run cmd/embedding_search/main.go --question "员工入职试用期最长不超过几个月"
+```
+
+question有默认值，也可以使用参数reset来重置数据库。可以通过`-h`来查看具体命令内容。
+
+```
+go run cmd/embedding_search/main.go -h
 ```
 
 ## 使用
