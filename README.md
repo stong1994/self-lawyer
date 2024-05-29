@@ -66,9 +66,6 @@ curl -XPOST http://localhost:8888/chat -d '{"question":"公司没有按照合同
 curl -X POST http://localhost:8888/reset_all
 ```
 
-```
-
 ## 文件来源
 
 法律文件来自[risshun/Chinese_Laws](https://github.com/risshun/Chinese_Laws)
-```
