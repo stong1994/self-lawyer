@@ -310,9 +310,7 @@ export function SearchDialog() {
                   hover:bg-slate-100 dark:hover:bg-gray-600
                   rounded border border-slate-200 dark:border-slate-600
                   transition-colors"
-                  onClick={(_) =>
-                    setSearch("公司需要按照工资总额支付五险一金吗？")
-                  }
+                  onClick={(_) => setSearch("试用期最长几个月？")}
                 >
                   试用期最长几个月？
                 </button>
