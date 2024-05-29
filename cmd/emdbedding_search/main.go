@@ -12,13 +12,17 @@ import (
 )
 
 var (
-	question = ""
-	reset    = false
+	question             = ""
+	reset                = false
+	embedding_cache      = false
+	embedding_cache_path = ""
 )
 
 func main() {
 	flag.BoolVar(&reset, "reset", false, "reset the database")
 	flag.StringVar(&question, "question", "试用期最长几个月?", "reset the database")
+	flag.BoolVar(&embedding_cache, "embedding_cache", false, "get/set embedding with cache")
+	flag.StringVar(&embedding_cache_path, "embedding_cache_path", "embedding_cache.text", "specify the path of embedding_cache")
 
 	flag.Parse()
 
@@ -28,7 +32,13 @@ func main() {
 	}
 
 	log.Println("connecting ollama")
-	ollama := vector.NewOllama(vector.OptionSetModel(os.Getenv("EMBEDDING_MODEL")))
+	var ollama repo.Vector
+	ollama = vector.NewOllama(vector.WithOptionSetModel(os.Getenv("EMBEDDING_MODEL")))
+	if embedding_cache {
+		ollama = vector.NewCacheOllama(
+			ollama.(*vector.Ollama),
+			vector.NewCache(vector.WithCacheOptionSetCachePath(embedding_cache_path)))
+	}
 	log.Println("connecting milvus")
 	milvus := repo.NewMilvus(ollama)
 

@@ -108,9 +108,9 @@ func (m *Milvus) InitCollection(ctx context.Context) {
 		// currently primary key field is compulsory, and only int64 is allowed
 		WithField(entity.NewField().WithName(idCol).WithDataType(entity.FieldTypeInt64).WithIsPrimaryKey(true).WithIsAutoID(true)).
 		// kind, chapter and content
-		WithField(entity.NewField().WithName(kindCol).WithDataType(entity.FieldTypeVarChar).WithMaxLength(50)).
-		WithField(entity.NewField().WithName(chapterCol).WithDataType(entity.FieldTypeVarChar).WithMaxLength(50)).
-		WithField(entity.NewField().WithName(contentCol).WithDataType(entity.FieldTypeVarChar).WithMaxLength(1024)).
+		WithField(entity.NewField().WithName(kindCol).WithDataType(entity.FieldTypeVarChar).WithMaxLength(100)).
+		WithField(entity.NewField().WithName(chapterCol).WithDataType(entity.FieldTypeVarChar).WithMaxLength(100)).
+		WithField(entity.NewField().WithName(contentCol).WithDataType(entity.FieldTypeVarChar).WithMaxLength(4096)).
 		// also the vector field is needed
 		WithField(entity.NewField().WithName(embeddingCol).WithDataType(entity.FieldTypeFloatVector).WithDim(int64(m.vector.GetDim())))
 

@@ -19,7 +19,7 @@ func (o *Ollama) GetDim() int {
 
 type Option func(*Ollama)
 
-func OptionSetModel(model string) Option {
+func WithOptionSetModel(model string) Option {
 	return func(o *Ollama) {
 		o.model = model
 	}

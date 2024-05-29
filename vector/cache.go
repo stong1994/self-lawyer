@@ -10,7 +10,7 @@ import (
 
 type CacheOption func(*Cache)
 
-var CacheOptionSetCachePath = func(path string) CacheOption {
+var WithCacheOptionSetCachePath = func(path string) CacheOption {
 	return func(c *Cache) {
 		c.cachePath = path
 	}

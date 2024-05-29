@@ -116,7 +116,7 @@ func (m *Milvus) Search(ctx context.Context, content string) (SearchResults, err
 		collectionName,
 		nil,
 		"",
-		[]string{idCol, chapterCol, contentCol, embeddingCol},
+		[]string{idCol, kindCol, chapterCol, contentCol, embeddingCol},
 		[]entity.Vector{entity.FloatVector(embedding)},
 		embeddingCol,
 		entity.COSINE,
@@ -129,8 +129,8 @@ func (m *Milvus) Search(ctx context.Context, content string) (SearchResults, err
 	var searchResult []SearchResult
 	for _, row := range res {
 		id := row.Fields.GetColumn(idCol)
-		chapter := row.Fields.GetColumn(chapterCol)
 		kind := row.Fields.GetColumn(kindCol)
+		chapter := row.Fields.GetColumn(chapterCol)
 		content := row.Fields.GetColumn(contentCol)
 		for i := 0; i < chapter.Len(); i++ {
 			d, err := id.GetAsInt64(i)
