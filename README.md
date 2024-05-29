@@ -29,6 +29,12 @@ go mod tidy
 go run ./cmd/server/main.go
 ```
 
+### 只测试文件解析
+
+```
+go run cmd/parse_laws/main.go
+```
+
 ### 只测试向量搜索
 
 ```

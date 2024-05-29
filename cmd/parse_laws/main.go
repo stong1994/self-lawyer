@@ -6,11 +6,15 @@ import (
 )
 
 func main() {
-	laws, err := document_parser.Parse()
+	laws, err := document_parser.ParseAll()
 	if err != nil {
 		panic(err)
 	}
 	_ = laws
 	fmt.Println("==================================================")
-	laws.Print()
+	for i, law := range laws {
+		fmt.Printf("the %d laws\n", i)
+		law.Print()
+		fmt.Println("-----------------------------------")
+	}
 }

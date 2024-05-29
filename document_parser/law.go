@@ -3,16 +3,22 @@ package document_parser
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/text"
 )
 
-type Laws []Law
+type Laws struct {
+	Kind     string
+	Chapters []Law
+}
 
 func (l Laws) Print() {
-	for i, law := range l {
+	fmt.Println("Law Kind:", l.Kind)
+	for i, law := range l.Chapters {
 		fmt.Printf("the %dth law %s\n", i, law.Chapter)
 		for _, item := range law.Items {
 			fmt.Printf("\t%s\n", item.Content)
@@ -30,7 +36,7 @@ type Law struct {
 	Items   []Item
 }
 
-var sourceFile = "./document_parser/laodongfa.md"
+var sourceFile = "./law_docs"
 
 func init() {
 	if s := os.Getenv("SOURCE_FILE"); s != "" {
@@ -38,10 +44,32 @@ func init() {
 	}
 }
 
-func Parse() (Laws, error) {
-	data, err := os.ReadFile(sourceFile)
+func ParseAll() ([]Laws, error) {
+	var rst []Laws
+	err := filepath.Walk(sourceFile, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		laws, err := ParseFile(path, info)
+		if err != nil {
+			return err
+		}
+		rst = append(rst, laws)
+		return nil
+	})
+	return rst, err
+}
+
+func ParseFile(path string, info os.FileInfo) (Laws, error) {
+	laws := Laws{
+		Kind: strings.TrimSuffix(info.Name(), ".md"),
+	}
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return laws, err
 	}
 
 	md := goldmark.New()
@@ -49,13 +77,13 @@ func Parse() (Laws, error) {
 
 	var lastLaw *Law
 
-	var laws []Law
+	var chapters []Law
 	err = ast.Walk(doc, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
 		switch node.Kind() {
 		case ast.KindHeading:
 			if entering {
 				if lastLaw != nil {
-					laws = append(laws, *lastLaw)
+					chapters = append(chapters, *lastLaw)
 				}
 				line := node.Lines().At(0)
 				lastLaw = &Law{
@@ -88,8 +116,9 @@ func Parse() (Laws, error) {
 		return ast.WalkContinue, nil
 	})
 	if err != nil {
-		return nil, err
+		return laws, err
 	}
 
+	laws.Chapters = chapters
 	return laws, nil
 }
