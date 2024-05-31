@@ -23,7 +23,7 @@ type SearchEngine interface {
 
 type Option func(*Ollama)
 
-func OptionSetModel(model string) Option {
+func WithModel(model string) Option {
 	return func(o *Ollama) {
 		o.model = model
 	}

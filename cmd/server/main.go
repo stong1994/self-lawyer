@@ -21,12 +21,12 @@ func main() {
 	}
 
 	log.Println("connecting ollama")
-	ollama := vector.NewOllama(vector.OptionSetModel(os.Getenv("EMBEDDING_MODEL")))
+	ollama := vector.NewOllama(vector.WithModel(os.Getenv("EMBEDDING_MODEL")))
 	log.Println("connecting milvus")
 	milvus := repo.NewMilvus(ollama)
 
 	log.Println("starting chating server")
-	chat := chat.NewOllama(milvus, chat.OptionSetModel(os.Getenv("COMPLETING_MODEL")))
+	chat := chat.NewOllama(milvus, chat.WithModel(os.Getenv("COMPLETING_MODEL")))
 	serve(chat, milvus)
 }
 

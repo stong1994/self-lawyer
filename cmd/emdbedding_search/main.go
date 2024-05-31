@@ -33,7 +33,7 @@ func main() {
 
 	log.Println("connecting ollama")
 	var ollama repo.Vector
-	ollama = vector.NewOllama(vector.WithOptionSetModel(os.Getenv("EMBEDDING_MODEL")))
+	ollama = vector.NewOllama(vector.WithModel(os.Getenv("EMBEDDING_MODEL")))
 	if embedding_cache {
 		ollama = vector.NewCacheOllama(
 			ollama.(*vector.Ollama),
